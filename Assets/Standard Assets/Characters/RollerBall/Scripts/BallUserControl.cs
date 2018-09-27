@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using UnityStandardAssets.CrossPlatformInput;
 
 namespace UnityStandardAssets.Vehicles.Ball
 {
@@ -40,9 +39,9 @@ namespace UnityStandardAssets.Vehicles.Ball
         {
             // Get the axis and jump input.
 
-            float h = CrossPlatformInputManager.GetAxis("Horizontal");
-            float v = CrossPlatformInputManager.GetAxis("Vertical");
-            jump = CrossPlatformInputManager.GetButton("Jump");
+            float h = Input.GetAxis("Horizontal");
+            float v = Input.GetAxis("Vertical");
+            jump = Input.GetButton("Jump");
 
             // calculate move direction
             if (cam != null)
