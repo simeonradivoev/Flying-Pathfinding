@@ -10,9 +10,9 @@ using UnityEngine;
 /// Run from Unity with `Tools -> Build -> Build Core Package`
 /// 
 /// Run from the command line with:
-///   `"C:\Program Files\Unity\Editor\Unity.exe" -executeMethod PackageBuilder.Build`
+///   `"C:\Program Files\Unity\Editor\Unity.exe" -executeMethod FlyingPathfindingPackageBuilder.Build`
 /// </summary>
-public class PackageBuilder
+public class FlyingPathfindingPackageBuilder
 {
 
     [MenuItem("Tools/Build Package/Flying Pathfinding")]
@@ -20,7 +20,7 @@ public class PackageBuilder
     {
         string[] rootDirs = { @"Assets\Flying-Pathfinding" };
         string excludeSubDir = @"";
-        string packageName = @"..\FlyingPathfinding.unitypackage";
+        string packageName = @"..\Flying-Pathfinding.unitypackage";
 
         // Delete everything in the excludes directory except *.unitypackage and *.md (and matching .meta)
         foreach (string rootDir in rootDirs)
