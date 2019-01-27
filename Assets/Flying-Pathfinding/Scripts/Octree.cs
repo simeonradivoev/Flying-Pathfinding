@@ -13,7 +13,7 @@ public class Octree : MonoBehaviour
 	[SerializeField] private int cellCount;
 	[SerializeField] private Transform player;
 	[SerializeField] private Transform destination;
-	[SerializeField] private PathfindingAlgorith algorithm = PathfindingAlgorith.AStar;
+	//[SerializeField] private PathfindingAlgorith algorithm = PathfindingAlgorith.AStar;
 	[SerializeField] private float maxActivePathfinds = 6;
 	private BoxCollider boxCollider;
 	private OctreeElement root;
@@ -291,7 +291,17 @@ public class Octree : MonoBehaviour
 		return null;
 	}
 
-	public bool IsBuilding { get { return toBeSplit.Count > 0; } }
+    private void OnDrawGizmos()
+    {
+        if (root == null)
+        {
+            return;
+        }
+
+        root.DrawGizmos();
+    }
+
+    public bool IsBuilding { get { return toBeSplit.Count > 0; } }
 
 	public class PathRequest
 	{
@@ -399,5 +409,26 @@ public class Octree : MonoBehaviour
 		{
 			LBD,LFD,LBU,LFU,RBD,RFD,RBU,RFU
 		}
-	}
+
+        internal void DrawGizmos()
+        {
+            if (Empty)
+            {
+                Gizmos.color = Color.green;
+                Gizmos.DrawWireCube(Bounds.center, Bounds.size);
+            }
+            else
+            {
+                Gizmos.color = Color.red;
+                Gizmos.DrawWireCube(Bounds.center, Bounds.size);
+            }
+            if (Children != null)
+            {
+                foreach (OctreeElement child in Children)
+                {
+                    child.DrawGizmos();
+                }
+            }
+        }
+    }
 }
