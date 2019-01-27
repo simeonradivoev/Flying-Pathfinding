@@ -20,7 +20,7 @@ public class RobotMovementController : MonoBehaviour
     private Rigidbody rigidbody;
     private Vector3 currentDestination;
     private Vector3 lastDestination;
-    private SphereCollider sphereCollider;
+    private Collider collider;
 
     public GameObject Target
     {
@@ -31,7 +31,7 @@ public class RobotMovementController : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        sphereCollider = GetComponent<SphereCollider>();
+        collider = GetComponent<Collider>();
         rigidbody = GetComponent<Rigidbody>();
         octree = FindObjectOfType<Octree>();
         if (octree == null)
@@ -183,7 +183,16 @@ public class RobotMovementController : MonoBehaviour
         {
             Gizmos.color = Color.blue;
             Vector3 predictedPosition = rigidbody.position + rigidbody.velocity * Time.deltaTime;
-            Gizmos.DrawWireSphere(predictedPosition, sphereCollider.radius);
+            if (collider.GetType() == typeof(SphereCollider))
+            {
+                Gizmos.DrawWireSphere(predictedPosition, ((SphereCollider)collider).radius);
+            } else if (collider.GetType() == typeof(CapsuleCollider))
+            {
+                Gizmos.DrawWireSphere(predictedPosition, ((CapsuleCollider)collider).radius);
+            } else
+            {
+                Gizmos.DrawWireCube(predictedPosition, collider.bounds.size);
+            }
         }
 
         if (Path != null)
