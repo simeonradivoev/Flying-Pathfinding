@@ -10,7 +10,7 @@ public class RobotRotationController : MonoBehaviour
 	[SerializeField] private bool physicsRotation;
 	[SerializeField, Header("Animated Rotation")] public float rotationEasing = 1f;
 
-	private Rigidbody rigidbody;
+	new private Rigidbody rigidbody;
 	private RobotMovementController movementController;
 
 	void Start()
