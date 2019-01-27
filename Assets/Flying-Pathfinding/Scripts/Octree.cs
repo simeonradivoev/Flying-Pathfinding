@@ -7,6 +7,9 @@ using UnityEngine;
 
 public class Octree : MonoBehaviour
 {
+    [Tooltip("Turn on debug information, such as providing Gizmo's showing cell status. Note that drawing all these Gizmo's takes some time, so normally you'll want this set to false.")]
+    public bool Debug = false;
+
 	[SerializeField] private float minCellSize = 2;
 	[SerializeField] private LayerMask mask = -1;
 	[SerializeField] private float maxMilisecondsPerFrame = 10;
@@ -15,6 +18,7 @@ public class Octree : MonoBehaviour
 	[SerializeField] private Transform destination;
 	//[SerializeField] private PathfindingAlgorith algorithm = PathfindingAlgorith.AStar;
 	[SerializeField] private float maxActivePathfinds = 6;
+
 	private BoxCollider boxCollider;
 	private OctreeElement root;
 	private Queue<OctreeElement> toBeSplit;
@@ -293,7 +297,7 @@ public class Octree : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (root == null)
+        if (root == null || !Debug)
         {
             return;
         }
