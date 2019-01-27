@@ -15,6 +15,10 @@ public class Octree : MonoBehaviour
 	[SerializeField] private Transform destination;
 	//[SerializeField] private PathfindingAlgorith algorithm = PathfindingAlgorith.AStar;
 	[SerializeField] private float maxActivePathfinds = 6;
+
+    [Tooltip("Show debug information for this octree?")]
+    public bool Debug = false;
+
 	private BoxCollider boxCollider;
 	private OctreeElement root;
 	private Queue<OctreeElement> toBeSplit;
@@ -293,7 +297,7 @@ public class Octree : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (root == null)
+        if (root == null || !Debug)
         {
             return;
         }
