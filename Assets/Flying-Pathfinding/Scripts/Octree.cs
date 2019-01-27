@@ -98,9 +98,9 @@ public class Octree : MonoBehaviour
 		}
 	}
 
-	public PathRequest GetPath(Vector3 from, Vector3 to)
+	public PathRequest GetPath(Vector3 from, Vector3 to, RobotMovementController controller)
 	{
-		PathRequest request = new PathRequest() {from = from,to = to,isCalculating = true};
+		PathRequest request = new PathRequest() {from = from, to = to, isCalculating = true, controller = controller};
 		requests.Enqueue(request);
 		return request;
 	}
@@ -117,8 +117,8 @@ public class Octree : MonoBehaviour
 			OctreeElement startNode = GetNode(request.from);
 			OctreeElement endNode = GetNode(request.to);
 			if (startNode == null || endNode == null) return;
-			weights.Add(startNode, startNode.cost);
-			fronteer.Enqueue(new OctreeElementQueueElemenet(startNode), startNode.cost);
+			weights.Add(startNode, startNode.BaseCost);
+            fronteer.Enqueue(new OctreeElementQueueElemenet(startNode), startNode.WeightedCost(request.controller.preferredFlightHeight, request.controller.minFlightHeight, request.controller.maxFlightHeight));
 			OctreeElement current;
 			OctreeElement closest = startNode;
 			float closestDistance = Vector3.SqrMagnitude(startNode.Bounds.center - request.to);
@@ -145,7 +145,7 @@ public class Octree : MonoBehaviour
 								closest = next;
 							}
 							float distance = (next.Bounds.center - request.to).sqrMagnitude;
-							float newWeight = weights[current] + next.cost;
+							float newWeight = weights[current] + next.WeightedCost(request.controller.preferredFlightHeight, request.controller.minFlightHeight, request.controller.maxFlightHeight);
 							if (!weights.ContainsKey(next) || newWeight < weights[next])
 							{
 								weights[next] = newWeight;
@@ -313,6 +313,7 @@ public class Octree : MonoBehaviour
 		internal List<Vector3> path;
 		internal bool isCalulated;
 		internal bool isCalculating;
+        internal RobotMovementController controller;
 
 		public PathRequest()
 		{
@@ -348,46 +349,79 @@ public class Octree : MonoBehaviour
 		}
 	}
 
-	public class OctreeElement
-	{
-		public static readonly Vector3[] splitDirs = {new Vector3(1,-1,-1), new Vector3(1,-1,1),new Vector3(1,1,-1),new Vector3(1,1,1), new Vector3(-1,-1,-1),new Vector3(-1,-1,1),new Vector3(-1,1,-1),new Vector3(-1,1,1)};
-		public static readonly int[][] localNeighborIndex =
-		{
-			new []{-1,4,2,-1,1,-1},new []{-1,5,3,-1,-1,0},new []{-1,6,-1,0,3,-1},new []{-1,7,-1,1,-1,2},new []{0,-1,6,-1,5,-1},new []{1,-1,7,-1,-1,4},
-			new []{2,-1,-1,4,7,-1},new []{3,-1,-1,5,-1,6}
-			
-		};
+    public class OctreeElement
+    {
+        public static readonly Vector3[] splitDirs = { new Vector3(1, -1, -1), new Vector3(1, -1, 1), new Vector3(1, 1, -1), new Vector3(1, 1, 1), new Vector3(-1, -1, -1), new Vector3(-1, -1, 1), new Vector3(-1, 1, -1), new Vector3(-1, 1, 1) };
+        public static readonly int[][] localNeighborIndex =
+        {
+            new []{-1,4,2,-1,1,-1},new []{-1,5,3,-1,-1,0},new []{-1,6,-1,0,3,-1},new []{-1,7,-1,1,-1,2},new []{0,-1,6,-1,5,-1},new []{1,-1,7,-1,-1,4},
+            new []{2,-1,-1,4,7,-1},new []{3,-1,-1,5,-1,6}
 
-		public static readonly Dir[] OppositeDirs = {Dir.R, Dir.L, Dir.D, Dir.U, Dir.B, Dir.F};
-		//def new[]{ Pos.LBD, Pos.LFD, Pos.LBU, Pos.LFU, Pos.RBD, Pos.RFD, Pos.RBU, Pos.RFU }
-		public static readonly Pos[][] ReflectedPos =
-		{
-			new[]{ Pos.RBD, Pos.RFD, Pos.RBU, Pos.RFU, Pos.LBD, Pos.LFD, Pos.LBU, Pos.LFU },
-			new[]{ Pos.RBD, Pos.RFD, Pos.RBU, Pos.RFU, Pos.LBD, Pos.LFD, Pos.LBU, Pos.LFU },
-			new[]{ Pos.LBU, Pos.LFU, Pos.LBD, Pos.LFD, Pos.RBU, Pos.RFU, Pos.RBD, Pos.RFD },
-			new[]{ Pos.LBU, Pos.LFU, Pos.LBD, Pos.LFD, Pos.RBU, Pos.RFU, Pos.RBD, Pos.RFD },
-			new[]{ Pos.LFD, Pos.LBD, Pos.LFU, Pos.LBU, Pos.RFD, Pos.RBD, Pos.RFU, Pos.RBU },
-			new[]{ Pos.LFD, Pos.LBD, Pos.LFU, Pos.LBU, Pos.RFD, Pos.RBD, Pos.RFU, Pos.RBU }
-		};
+        };
 
-		public static readonly Pos[][] PosInDir =
-		{
-			new[] {Pos.LBD, Pos.LFD, Pos.LBU, Pos.LFU},
-			new[] {Pos.RBD, Pos.RFD, Pos.RBU, Pos.RFU},
-			new[]{ Pos.LBU, Pos.LFU, Pos.RBU, Pos.RFU },
-			new[]{ Pos.LBD, Pos.LFD, Pos.RBD, Pos.RFD},
-			new[]{ Pos.LFD, Pos.LFU, Pos.RFD, Pos.RFU },
-			new[]{ Pos.LBD, Pos.LBU, Pos.RBD, Pos.RBU}
-		};
-		public Bounds Bounds;
-		public OctreeElement[] Children;
-		public OctreeElement Parent;
-		public OctreeElement[][] Neigbors;
-		public float cost = 1;
-		public int Depth;
-		public bool Empty;
+        public static readonly Dir[] OppositeDirs = { Dir.R, Dir.L, Dir.D, Dir.U, Dir.B, Dir.F };
+        //def new[]{ Pos.LBD, Pos.LFD, Pos.LBU, Pos.LFU, Pos.RBD, Pos.RFD, Pos.RBU, Pos.RFU }
+        public static readonly Pos[][] ReflectedPos =
+        {
+            new[]{ Pos.RBD, Pos.RFD, Pos.RBU, Pos.RFU, Pos.LBD, Pos.LFD, Pos.LBU, Pos.LFU },
+            new[]{ Pos.RBD, Pos.RFD, Pos.RBU, Pos.RFU, Pos.LBD, Pos.LFD, Pos.LBU, Pos.LFU },
+            new[]{ Pos.LBU, Pos.LFU, Pos.LBD, Pos.LFD, Pos.RBU, Pos.RFU, Pos.RBD, Pos.RFD },
+            new[]{ Pos.LBU, Pos.LFU, Pos.LBD, Pos.LFD, Pos.RBU, Pos.RFU, Pos.RBD, Pos.RFD },
+            new[]{ Pos.LFD, Pos.LBD, Pos.LFU, Pos.LBU, Pos.RFD, Pos.RBD, Pos.RFU, Pos.RBU },
+            new[]{ Pos.LFD, Pos.LBD, Pos.LFU, Pos.LBU, Pos.RFD, Pos.RBD, Pos.RFU, Pos.RBU }
+        };
 
-		public OctreeElement(OctreeElement parent,Bounds bounds,int depth)
+        public static readonly Pos[][] PosInDir =
+        {
+            new[] {Pos.LBD, Pos.LFD, Pos.LBU, Pos.LFU},
+            new[] {Pos.RBD, Pos.RFD, Pos.RBU, Pos.RFU},
+            new[]{ Pos.LBU, Pos.LFU, Pos.RBU, Pos.RFU },
+            new[]{ Pos.LBD, Pos.LFD, Pos.RBD, Pos.RFD},
+            new[]{ Pos.LFD, Pos.LFU, Pos.RFD, Pos.RFU },
+            new[]{ Pos.LBD, Pos.LBU, Pos.RBD, Pos.RBU}
+        };
+        public Bounds Bounds;
+        public OctreeElement[] Children;
+        public OctreeElement Parent;
+        public OctreeElement[][] Neigbors;
+        public int Depth;
+        public bool Empty;
+
+        private float _cost = 1;
+        /// <summary>
+        /// Cost of movement through this cell, ignoring the preferences of any particular agent.
+        /// </summary>
+        public float BaseCost
+        {
+            get { return _cost; }
+        }
+
+        /// <summary>
+        /// Cost of movement through this cell, taking into account the preferences of an agent.
+        /// </summary>
+        /// <param name="preferredHeight"></param>
+        /// <param name="minHeight"></param>
+        /// <param name="maxHeight"></param>
+        /// <returns></returns>
+        public float WeightedCost(float preferredHeight, float minHeight, float maxHeight)
+        {
+            // TODO Optimize this calculation by caching results
+            float height = Bounds.center.y;
+            if (height == preferredHeight)
+            {
+                return BaseCost * 0.5f;
+            } else if (height < minHeight || height > maxHeight)
+            {
+                return BaseCost * 10;
+            } else 
+            {
+                float weight = ((minHeight / height) + (maxHeight / height)) / 2;
+                return BaseCost * weight;
+            }
+        }
+
+
+        public OctreeElement(OctreeElement parent,Bounds bounds,int depth)
 		{
 			Parent = parent;
 			Bounds = bounds;

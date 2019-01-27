@@ -23,6 +23,14 @@ public class RobotMovementController : MonoBehaviour
     private Vector3 currentDestination;
     private Vector3 lastDestination;
     private Collider collider;
+    
+    [Header("Height")]
+    [Tooltip("preferred height to fly at.")]
+    public float preferredFlightHeight = 1.5f;
+    [Tooltip("Minimum height to fly at (does not impact landing).")]
+    public float minFlightHeight = 1f;
+    [Tooltip("Maximum height to fly at.")]
+    public float maxFlightHeight = 7;
 
     public GameObject Target
     {
@@ -54,7 +62,7 @@ public class RobotMovementController : MonoBehaviour
             lastDestination = target.transform.position;
 
             oldPath = newPath;
-            newPath = octree.GetPath(transform.position, lastDestination);
+            newPath = octree.GetPath(transform.position, lastDestination, this);
         }
 
         /*if (newPath != null && !newPath.isCalculating)
