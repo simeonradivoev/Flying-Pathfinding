@@ -9,8 +9,10 @@ public class RobotMovementController : MonoBehaviour
     [SerializeField] private Transform target;
     [SerializeField] private float maxDistanceRebuildPath = 1;
     [SerializeField] private float acceleration = 1;
-    [SerializeField] private float minReachDistance = 2f;
-    [SerializeField] private float minFollowDistance = 4f;
+    [Tooltip("The minimum distance an agent must get from an object before it is considered to have reached it.")]
+    public float minReachDistance = 2f;
+    [Tooltip("The minimum distance to maintain from an object that the agent is following.")]
+    public float minFollowDistance = 4f;
     [SerializeField] private float pathPointRadius = 0.2f;
     [SerializeField] private Octree octree;
     [SerializeField] private LayerMask playerSeeLayerMask = -1;
@@ -27,7 +29,7 @@ public class RobotMovementController : MonoBehaviour
         get { return target.gameObject; }
         set { target = value.transform; }
     }
-
+    
     // Use this for initialization
     void Start()
     {
