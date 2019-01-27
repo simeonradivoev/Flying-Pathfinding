@@ -6,7 +6,8 @@ public class RobotRotationController : MonoBehaviour
 	private readonly VectorPid angularVelocityController = new VectorPid(33.7766f, 0, 0.2553191f);
 	[SerializeField] private VectorPid headingController = new VectorPid(9.244681f, 0, 0.06382979f);
 
-	[SerializeField] private Transform playerHead;
+    [Tooltip("If the agent is to look at the player when not moving to an object then set this field. If this is null then the agent will not change it's direction of focus if not moving.")]
+	public Transform playerHead;
 	[SerializeField] private bool physicsRotation;
 	[SerializeField, Header("Animated Rotation")] public float rotationEasing = 1f;
 
@@ -60,7 +61,7 @@ public class RobotRotationController : MonoBehaviour
 			{
 				return movementController.CurrentTargetPosition - rigidbody.position;
 			}
-			return playerHead.position - rigidbody.position;
+			return transform.rotation.eulerAngles;
 		}
 	}
 
