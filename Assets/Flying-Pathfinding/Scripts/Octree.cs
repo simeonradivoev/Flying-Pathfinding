@@ -21,7 +21,7 @@ public class Octree : MonoBehaviour
 
 	private BoxCollider boxCollider;
 	private OctreeElement root;
-	private Queue<OctreeElement> toBeSplit;
+	private Queue<OctreeElement> toBeSplit = new Queue<OctreeElement>();
 	private Queue<PathRequest> requests = new Queue<PathRequest>();
 	private List<PathRequest> running = new List<PathRequest>();
 
@@ -30,7 +30,6 @@ public class Octree : MonoBehaviour
 	{
 		boxCollider = GetComponent<BoxCollider>();
 		root = new OctreeElement(null,boxCollider.bounds,0);
-		toBeSplit = new Queue<OctreeElement>();
 		toBeSplit.Enqueue(root);
 		cellCount++;
 		float doubleMinCellSize = minCellSize * 2f;
