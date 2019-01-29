@@ -32,12 +32,12 @@ public class RobotMovementController : MonoBehaviour
     [Tooltip("Maximum height to fly at.")]
     public float maxFlightHeight = 7;
 
-    public GameObject Target
+    public Transform Target
     {
-        get { return target.gameObject; }
-        set { target = value.transform; }
+        get { return target; }
+        set { target = value; }
     }
-    
+
     // Use this for initialization
     void Start()
     {
