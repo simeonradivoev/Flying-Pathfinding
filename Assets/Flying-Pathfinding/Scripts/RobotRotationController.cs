@@ -57,7 +57,7 @@ public class RobotRotationController : MonoBehaviour
 	{
 		get
 		{
-			if (movementController.HasTarget)
+			if (movementController.HasReachableTarget)
 			{
 				return movementController.CurrentTargetPosition - rigidbody.position;
 			}

@@ -19,10 +19,10 @@ public class RobotMovementController : MonoBehaviour
     [SerializeField] private GameObject playerObject;
     private Octree.PathRequest oldPath;
     private Octree.PathRequest newPath;
-    private Rigidbody rigidbody;
+    new private Rigidbody rigidbody;
     private Vector3 currentDestination;
     private Vector3 lastDestination;
-    private Collider collider;
+    new private Collider collider;
     
     [Header("Height")]
     [Tooltip("preferred height to fly at.")]
@@ -36,6 +36,11 @@ public class RobotMovementController : MonoBehaviour
     {
         get { return target; }
         set { target = value; }
+    }
+
+    public Octree Octree
+    {
+        get { return octree; }
     }
 
     // Use this for initialization
@@ -137,6 +142,8 @@ public class RobotMovementController : MonoBehaviour
         }
         else
         {
+            // We don't have a path so we will slow to a stop
+            // FIMXE: what if we are stuck and we just need to find a path?
             rigidbody.velocity -= rigidbody.velocity * Time.deltaTime * acceleration;
         }
     }
@@ -163,7 +170,12 @@ public class RobotMovementController : MonoBehaviour
         }
     }
 
-    public bool HasTarget
+    /// <summary>
+    /// Test to see if there is a path to the current target.
+    /// Note that this will return false if the path is still building,
+    /// therefore you should also check Octree.IsBuilding.
+    /// </summary>
+    public bool HasReachableTarget
     {
         get
         {
