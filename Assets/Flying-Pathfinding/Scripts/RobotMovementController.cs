@@ -6,6 +6,8 @@ using UnityEngine.AI;
 
 public class RobotMovementController : MonoBehaviour
 {
+    [Tooltip("Set to true if you want the this component to control movement using the rigid body. If set to false movement must be managed elsewhere. For example, use false here if your animations have root motion.")]
+    [SerializeField] private bool controlMovement = false;
     [SerializeField] private Transform target;
     [SerializeField] private float maxDistanceRebuildPath = 1;
     [SerializeField] private float acceleration = 1;
@@ -98,53 +100,59 @@ public class RobotMovementController : MonoBehaviour
 
         var curPath = Path;
 
-        if (!curPath.isCalculating && curPath != null && curPath.Path.Count > 0)
+        if (curPath != null && !curPath.isCalculating && curPath.Path.Count > 0)
         {
             if (Vector3.Distance(transform.position, target.position) < minFollowDistance && CanSeePlayer())
             {
                 curPath.Reset();
             }
 
-            currentDestination = curPath.Path[0] + Vector3.ClampMagnitude(rigidbody.position - curPath.Path[0], pathPointRadius);
-
-            rigidbody.velocity += Vector3.ClampMagnitude(currentDestination - transform.position, 1) * Time.deltaTime * acceleration;
-            float sqrMinReachDistance = minReachDistance * minReachDistance;
-
-            Vector3 predictedPosition = rigidbody.position + rigidbody.velocity * Time.deltaTime;
-            float shortestPathDistance = Vector3.SqrMagnitude(predictedPosition - currentDestination);
-            int shortestPathPoint = 0;
-
-            for (int i = 0; i < curPath.Path.Count; i++)
+            if (controlMovement)
             {
-                float sqrDistance = Vector3.SqrMagnitude(rigidbody.position - curPath.Path[i]);
-                if (sqrDistance <= sqrMinReachDistance)
+                currentDestination = curPath.Path[0] + Vector3.ClampMagnitude(rigidbody.position - curPath.Path[0], pathPointRadius);
+
+                rigidbody.velocity += Vector3.ClampMagnitude(currentDestination - transform.position, 1) * Time.deltaTime * acceleration;
+                float sqrMinReachDistance = minReachDistance * minReachDistance;
+
+                Vector3 predictedPosition = rigidbody.position + rigidbody.velocity * Time.deltaTime;
+                float shortestPathDistance = Vector3.SqrMagnitude(predictedPosition - currentDestination);
+                int shortestPathPoint = 0;
+
+                for (int i = 0; i < curPath.Path.Count; i++)
                 {
-                    if (i < curPath.Path.Count)
+                    float sqrDistance = Vector3.SqrMagnitude(rigidbody.position - curPath.Path[i]);
+                    if (sqrDistance <= sqrMinReachDistance)
                     {
-                        curPath.Path.RemoveRange(0, i + 1);
+                        if (i < curPath.Path.Count)
+                        {
+                            curPath.Path.RemoveRange(0, i + 1);
+                        }
+                        shortestPathPoint = 0;
+                        break;
                     }
-                    shortestPathPoint = 0;
-                    break;
+
+                    float sqrPredictedDistance = Vector3.SqrMagnitude(predictedPosition - curPath.Path[i]);
+                    if (sqrPredictedDistance < shortestPathDistance)
+                    {
+                        shortestPathDistance = sqrPredictedDistance;
+                        shortestPathPoint = i;
+                    }
                 }
 
-                float sqrPredictedDistance = Vector3.SqrMagnitude(predictedPosition - curPath.Path[i]);
-                if (sqrPredictedDistance < shortestPathDistance)
+                if (shortestPathPoint > 0)
                 {
-                    shortestPathDistance = sqrPredictedDistance;
-                    shortestPathPoint = i;
+                    curPath.Path.RemoveRange(0, shortestPathPoint);
                 }
-            }
-
-            if (shortestPathPoint > 0)
-            {
-                curPath.Path.RemoveRange(0, shortestPathPoint);
             }
         }
         else
         {
             // We don't have a path so we will slow to a stop
             // FIMXE: what if we are stuck and we just need to find a path?
-            rigidbody.velocity -= rigidbody.velocity * Time.deltaTime * acceleration;
+            if (controlMovement)
+            {
+                rigidbody.velocity -= rigidbody.velocity * Time.deltaTime * acceleration;
+            }
         }
     }
 
@@ -158,7 +166,7 @@ public class RobotMovementController : MonoBehaviour
         return false;
     }
 
-    private Octree.PathRequest Path
+    internal Octree.PathRequest Path
     {
         get
         {
@@ -201,7 +209,7 @@ public class RobotMovementController : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        if (rigidbody != null)
+        if (rigidbody != null && collider != null)
         {
             Gizmos.color = Color.blue;
             Vector3 predictedPosition = rigidbody.position + rigidbody.velocity * Time.deltaTime;
