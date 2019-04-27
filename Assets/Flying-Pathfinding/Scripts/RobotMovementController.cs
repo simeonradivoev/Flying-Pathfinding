@@ -40,6 +40,25 @@ public class RobotMovementController : MonoBehaviour
         set { target = value; }
     }
 
+    /// <summary>
+    /// Returns true if the current destination is the same as the final destination.
+    /// </summary>
+    /// <returns></returns>
+    public bool ApproachingFinalDestination
+    {
+        get
+        {
+            if (target)
+            {
+                return currentDestination == target.position;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
     public Octree Octree
     {
         get { return octree; }
@@ -112,7 +131,14 @@ public class RobotMovementController : MonoBehaviour
                 currentDestination = curPath.Path[0] + Vector3.ClampMagnitude(rigidbody.position - curPath.Path[0], pathPointRadius);
 
                 rigidbody.velocity += Vector3.ClampMagnitude(currentDestination - transform.position, 1) * Time.deltaTime * acceleration;
-                float sqrMinReachDistance = minReachDistance * minReachDistance;
+                float sqrMinReachDistance;  
+                if (ApproachingFinalDestination)
+                {
+                    sqrMinReachDistance = minReachDistance * minReachDistance;
+                } else
+                {
+                    sqrMinReachDistance = minReachDistance * minReachDistance * 2;
+                }
 
                 Vector3 predictedPosition = rigidbody.position + rigidbody.velocity * Time.deltaTime;
                 float shortestPathDistance = Vector3.SqrMagnitude(predictedPosition - currentDestination);
