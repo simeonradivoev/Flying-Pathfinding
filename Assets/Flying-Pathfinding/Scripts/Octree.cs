@@ -120,8 +120,22 @@ public class Octree : MonoBehaviour
 		requests.Enqueue(request);
 		return request;
 	}
+    
+    public void FitToTerrain(Terrain terrain)
+    {
+        Vector3 terrainPos = terrain.transform.position;
+        Vector3 terrainSize = terrain.terrainData.size;
+        terrainSize.y /= 2;
 
-	public void GetPathAstar(object context)
+        float x = terrainPos.x + terrainSize.x / 2;
+        float z = terrainPos.z + terrainSize.z / 2;
+        float y = terrainPos.y + terrainSize.y / 2;
+        transform.position = new Vector3(x, y, z);
+            
+        GetComponent<BoxCollider>().size = terrainSize;
+    }
+
+    public void GetPathAstar(object context)
 	{
 		PathRequest request = (PathRequest)context;
 
